@@ -1,0 +1,13 @@
+{
+  "name": "smartlead-api",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}
