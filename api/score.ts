@@ -7,16 +7,14 @@ const RATE_LIMIT = 100;
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
-  const windowStart = now - (60 * 60 * 1000);
-  
+  const windowStart = now - 60 * 60 * 1000;
   const record = requestCounts.get(ip);
+
   if (!record || record.resetTime < windowStart) {
     requestCounts.set(ip, { count: 1, resetTime: now + 60 * 60 * 1000 });
     return true;
   }
-  
   if (record.count >= RATE_LIMIT) return false;
-  
   record.count++;
   return true;
 }
@@ -28,15 +26,13 @@ function generateRequestId(): string {
 export default function handler(req: VercelRequest, res: VercelResponse) {
   const requestId = generateRequestId();
   const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown';
-  
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Content-Type', 'application/json');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method !== 'POST') {
     const response: ApiResponse = {
@@ -60,8 +56,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = req.body as LeadInput;
-    
-    if (!body.name || !body.message) {
+
+    if (!body?.name || !body?.message) {
       const response: ApiResponse = {
         success: false,
         error: 'Missing required fields: name and message',
@@ -72,7 +68,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const result = scoreLead(body);
-    
+
     const response: ApiResponse = {
       success: true,
       data: result,
@@ -80,8 +76,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       processedAt: new Date().toISOString()
     };
 
-    res.status(200).json(response);
-    
+    return res.status(200).json(response);
+
   } catch (error) {
     const response: ApiResponse = {
       success: false,
@@ -89,6 +85,6 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       requestId,
       processedAt: new Date().toISOString()
     };
-    res.status(500).json(response);
+    return res.status(500).json(response);
   }
 }
